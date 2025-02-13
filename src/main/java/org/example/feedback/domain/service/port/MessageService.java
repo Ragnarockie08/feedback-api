@@ -8,6 +8,6 @@ import java.util.UUID;
 
 public interface MessageService {
 
-    MessageResponse postMessage(UUID inboxId, MessageRequest messageRequest);
-    List<MessageResponse> getMessagesByInbox(UUID inboxId, String username);
+    MessageResponse create(UUID inboxId, MessageRequest messageRequest, String username, String secret);
+    List<MessageResponse> getByInbox(UUID inboxId, String username, String secret);
 }

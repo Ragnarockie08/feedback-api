@@ -1,0 +1,21 @@
+server:
+  port: 8080  # The port your application will run on
+
+spring:
+
+  jpa:
+    hibernate:
+      ddl-auto: update          # Automatically create/update tables for entities
+    show-sql: true              # Log SQL statements for debugging
+    open-in-view: false         # Good practice to disable Open Session in View in many cases
+
+logging:
+  level:
+    root: info
+    org.springframework.web: debug  # Example: more detailed logs for Spring web package
+
+#TODO: A place for custom properties
+myapp:
+  signature:
+    algorithm: "SHA-256"
+  # Other custom properties as needed

@@ -6,8 +6,8 @@ import org.example.feedback.dto.response.InboxResponse;
 import org.example.feedback.mapper.index.InboxMapper;
 import org.example.feedback.domain.model.Inbox;
 import org.example.feedback.domain.repository.InboxRepository;
-import org.example.feedback.security.SignatureService;
 import org.example.feedback.domain.service.port.InboxService;
+import org.example.feedback.security.SignatureService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,8 +20,8 @@ public class InboxServiceImpl implements InboxService {
     private final SignatureService signatureService;
     private final InboxRepository inboxRepository;
 
-    public InboxResponse createInbox(InboxRequest inboxRequest) {
-        String signature = signatureService.generateSignature(inboxRequest.getUsername());
+    public InboxResponse createInbox(InboxRequest inboxRequest, String username, String secret) {
+        String signature = signatureService.generateSignature(username, secret);
 
         Inbox inbox = Inbox.builder()
                 .topic(inboxRequest.getTopic())

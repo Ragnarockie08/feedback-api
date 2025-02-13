@@ -56,10 +56,12 @@ public class InboxControllerTest {
                 .allowAnonymous(true)
                 .build();
 
-        when(inboxService.createInbox(any(InboxRequest.class))).thenReturn(inboxResponse);
+        when(inboxService.createInbox(any(InboxRequest.class), anyString(), anyString())).thenReturn(inboxResponse);
 
         //then
         mockMvc.perform(post("/api/inboxes")
+                        .header("x-user-name", "wrongUser")
+                        .header("x-user-secret", "secret")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -86,8 +88,7 @@ public class InboxControllerTest {
     void shouldPostMessageSuccessfully() throws Exception {
         String requestBody = """
             {
-                "body": "Test message",
-                "username": "user123"
+                "body": "Test message"
             }
         """;
 
@@ -96,9 +97,11 @@ public class InboxControllerTest {
                 .body("Test message")
                 .timestamp(LocalDateTime.now())
                 .build();
-        when(messageService.postMessage(any(UUID.class), any(MessageRequest.class))).thenReturn(messageResponse);
+        when(messageService.create(any(UUID.class), any(MessageRequest.class), anyString(), anyString())).thenReturn(messageResponse);
 
         mockMvc.perform(post("/api/inboxes/{inboxId}/messages", UUID.randomUUID())
+                        .header("x-user-name", "wrongUser")
+                        .header("x-user-secret", "secret")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -109,10 +112,11 @@ public class InboxControllerTest {
     void shouldReturnUnauthorizedWhenGettingMessagesWithInvalidUser() throws Exception {
         UUID inboxId = UUID.randomUUID();
         doThrow(new SecurityException("Invalid credentials"))
-                .when(messageService).getMessagesByInbox(any(UUID.class), eq("wrongUser"));
+                .when(messageService).getByInbox(any(UUID.class), eq("wrongUser"), eq("secret"));
 
         mockMvc.perform(get("/api/inboxes/{inboxId}/messages", inboxId)
-                        .header("x-user-name", "wrongUser"))
+                        .header("x-user-name", "wrongUser")
+                        .header("x-user-secret", "secret"))
                 .andExpect(status().isForbidden());
     }
 
@@ -132,7 +136,6 @@ public class InboxControllerTest {
                         .content(requestBody))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$[?(@.field == 'topic')].message").value("Topic must not be blank"))
-                .andExpect(jsonPath("$[?(@.field == 'username')].message").value("Username must not be blank"))
                 .andExpect(jsonPath("$[?(@.field == 'expiresInDays')].message").value("ExpiresIn number must be greater than 0"));
     }
 }

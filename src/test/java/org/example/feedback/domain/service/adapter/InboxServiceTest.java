@@ -5,6 +5,7 @@ import org.example.feedback.domain.repository.InboxRepository;
 import org.example.feedback.dto.request.InboxRequest;
 import org.example.feedback.dto.response.InboxResponse;
 import org.example.feedback.security.SignatureService;
+import org.example.feedback.security.adapter.TripcodeStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,7 +38,7 @@ public class InboxServiceTest {
     @BeforeEach
     void setUp() {
         UUID inboxId = UUID.randomUUID();
-        inboxRequest = new InboxRequest("Test Topic", "user123", 7, true);
+        inboxRequest = new InboxRequest("Test Topic", 7, true);
         inbox = Inbox.builder()
                 .id(inboxId)
                 .topic("Test Topic")
@@ -50,11 +51,11 @@ public class InboxServiceTest {
     @Test
     void shouldCreateInboxSuccessfully() {
         // Given
-        when(signatureService.generateSignature("user123")).thenReturn("user123#signature");
+        when(signatureService.generateSignature("user123", "secret")).thenReturn("user123#signature");
         when(inboxRepository.save(any(Inbox.class))).thenReturn(inbox);
 
         // When
-        InboxResponse response = inboxService.createInbox(inboxRequest);
+        InboxResponse response = inboxService.createInbox(inboxRequest, "user123", "secret");
 
         // Then
         assertNotNull(response);

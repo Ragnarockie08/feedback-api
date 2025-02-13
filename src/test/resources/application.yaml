@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+
+logging:
+  level:
+    root: info
+    org.springframework.web: debug
+
+#TODO: A place for custom properties
+myapp:
+  signature:
+    algorithm: "SHA-256"
+  # Other custom properties as needed
