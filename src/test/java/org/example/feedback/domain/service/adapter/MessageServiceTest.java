@@ -6,7 +6,7 @@ import org.example.feedback.domain.model.Inbox;
 import org.example.feedback.domain.model.Message;
 import org.example.feedback.domain.repository.InboxRepository;
 import org.example.feedback.domain.repository.MessageRepository;
-import org.example.feedback.security.InboxAuthService;
+import org.example.feedback.security.adapter.OwnershipAuthServiceImpl;
 import org.example.feedback.security.SignatureService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ public class MessageServiceTest {
     @Mock
     private SignatureService signatureService;
     @Mock
-    private InboxAuthService inboxAuthService;
+    private OwnershipAuthServiceImpl inboxAuthService;
     @Mock
     private MessageRepository messageRepository;
 
@@ -47,17 +47,17 @@ public class MessageServiceTest {
     void setUp() {
         inboxId = UUID.randomUUID();
         inbox = new Inbox(inboxId, "Test Topic", "user123#signature", LocalDateTime.now().plusDays(1), true, List.of());
-        messageRequest = new MessageRequest("Test message", "user123");
+        messageRequest = new MessageRequest("Test message");
     }
 
     @Test
     void shouldPostMessageSuccessfully() {
         // Given
         when(inboxRepository.findById(inboxId)).thenReturn(Optional.of(inbox));
-        when(signatureService.generateSignature("user123")).thenReturn("user123#signature");
+        when(signatureService.generateSignature("user123", "secret")).thenReturn("user123#signature");
 
         // When
-        MessageResponse response = messageService.postMessage(inboxId, messageRequest);
+        MessageResponse response = messageService.create(inboxId, messageRequest, "user123", "secret");
 
         // Then
         assertNotNull(response);
@@ -71,7 +71,7 @@ public class MessageServiceTest {
         when(inboxRepository.findById(inboxId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> messageService.postMessage(inboxId, messageRequest));
+        assertThrows(IllegalArgumentException.class, () -> messageService.create(inboxId, messageRequest, "user123", "secret"));
     }
 
     @Test
@@ -81,18 +81,18 @@ public class MessageServiceTest {
         when(inboxRepository.findById(inboxId)).thenReturn(Optional.of(inbox));
 
         // When & Then
-        assertThrows(IllegalStateException.class, () -> messageService.postMessage(inboxId, messageRequest));
+        assertThrows(IllegalStateException.class, () -> messageService.create(inboxId, messageRequest, "user123", "secret"));
     }
 
     @Test
     void shouldRetrieveInboxMessagesSuccessfully() {
         // Given
         when(inboxRepository.findById(inboxId)).thenReturn(Optional.of(inbox));
-        doNothing().when(inboxAuthService).verifyInboxOwnership("user123", inbox.getSignature());
+        doNothing().when(inboxAuthService).verifyInboxOwnership("user123", "secret", inbox.getSignature());
         when(messageRepository.findByInboxId(inboxId)).thenReturn(List.of(new Message()));
 
         // When
-        List<MessageResponse> responses = messageService.getMessagesByInbox(inboxId, "user123");
+        List<MessageResponse> responses = messageService.getByInbox(inboxId, "user123", "secret");
 
         // Then
         assertNotNull(responses);
@@ -105,9 +105,9 @@ public class MessageServiceTest {
         when(inboxRepository.findById(inboxId)).thenReturn(Optional.of(inbox));
         doThrow(new SecurityException("Invalid credentials"))
                 .when(inboxAuthService)
-                .verifyInboxOwnership("wrongUser", "user123#signature");
+                .verifyInboxOwnership("wrongUser", "secret", "user123#signature");
 
         // When & Then
-        assertThrows(SecurityException.class, () -> messageService.getMessagesByInbox(inboxId, "wrongUser"));
+        assertThrows(SecurityException.class, () -> messageService.getByInbox(inboxId, "wrongUser", "secret"));
     }
 }

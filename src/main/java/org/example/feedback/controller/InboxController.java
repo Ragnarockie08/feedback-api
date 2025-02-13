@@ -26,8 +26,10 @@ public class InboxController {
     }
 
     @PostMapping
-    public ResponseEntity<InboxResponse> createInbox(@Valid @RequestBody InboxRequest inboxRequest) {
-        return ResponseEntity.ok(inboxService.createInbox(inboxRequest));
+    public ResponseEntity<InboxResponse> createInbox(@Valid @RequestBody InboxRequest inboxRequest,
+                                                     @RequestHeader("x-user-name") String username,
+                                                     @RequestHeader("x-user-secret") String secret) {
+        return ResponseEntity.ok(inboxService.createInbox(inboxRequest, username, secret));
     }
 
     @GetMapping
@@ -38,16 +40,19 @@ public class InboxController {
 
     @PostMapping("/{inboxId}/messages")
     public ResponseEntity<MessageResponse> postMessage(@PathVariable UUID inboxId,
-                                                       @Valid @RequestBody MessageRequest messageRequest) {
-        MessageResponse response = messageService.postMessage(inboxId, messageRequest);
+                                                       @Valid @RequestBody MessageRequest messageRequest,
+                                                       @RequestHeader(value = "x-user-name", required = false) String username,
+                                                       @RequestHeader(value = "x-user-secret", required = false) String secret) {
+        MessageResponse response = messageService.create(inboxId, messageRequest, username, secret);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{inboxId}/messages")
     public ResponseEntity<List<MessageResponse>> getInboxMessages(
             @PathVariable UUID inboxId,
-            @RequestHeader("x-user-name") String username) {
-        List<MessageResponse> messages = messageService.getMessagesByInbox(inboxId, username);
+            @RequestHeader("x-user-name") String username,
+            @RequestHeader("x-user-secret") String secret) {
+        List<MessageResponse> messages = messageService.getByInbox(inboxId, username, secret);
         return ResponseEntity.ok(messages);
     }
 }

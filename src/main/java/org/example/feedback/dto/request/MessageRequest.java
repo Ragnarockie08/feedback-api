@@ -9,10 +9,8 @@ public class MessageRequest {
 
     @NotBlank
     String body;
-    String username;
 
-    public MessageRequest(String body, String username) {
+    public MessageRequest(String body) {
         this.body = body;
-        this.username = username;
     }
 }

@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface InboxService {
 
-    InboxResponse createInbox(InboxRequest inboxRequest);
+    InboxResponse createInbox(InboxRequest inboxRequest, String username, String secret);
     List<InboxResponse> getAllInboxes();
 }
 
